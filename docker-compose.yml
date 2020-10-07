@@ -1,0 +1,54 @@
+version: '3.5'
+
+services:
+  mongo-0:
+    image: mongo:4.2.8
+    container_name: mongo-0
+    networks:
+      - mongo
+    volumes:
+      - mongo-0:/data
+    command: --replSet rs0
+
+  mongo-1:
+    image: mongo:4.2.8
+    container_name: mongo-1
+    networks:
+      - mongo
+    volumes:
+      - mongo-1:/data
+    command: --replSet rs0
+
+  mongo-2:
+    image: mongo:4.2.8
+    container_name: mongo-2
+    networks:
+      - mongo
+    volumes:
+      - mongo-2:/data
+    command: --replSet rs0
+
+  # Sidecar container to initialize the replicaset
+  sidecar:
+    image: mongo:4.2.8
+    depends_on:
+      - mongo-0
+      - mongo-1
+      - mongo-2
+    networks:
+      - mongo
+    volumes:
+      - ./init.sh:/init.sh
+      - ./init.js:/init.js
+    entrypoint:
+      - /init.sh
+      - '2' # Create a replicaset from mongo-0 to mongo-2
+
+volumes:
+  mongo-0:
+  mongo-1:
+  mongo-2:
+
+networks:
+  mongo:
+    name: mongo
